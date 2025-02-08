@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Criminal Profiling System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="/css/styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    <!-- Navigation (same as index.html) -->
+    <div id="nav-placeholder"></div>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="px-4 py-6 sm:px-0">
+                <h1 class="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+                
+                <!-- Stats Grid -->
+                <div class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                    <!-- Stat cards will be dynamically inserted here -->
+                </div>
+
+                <!-- Charts -->
+                <div class="mt-8">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-medium text-gray-900">Profile Statistics</h3>
+                        <canvas id="profileChart" class="mt-4"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer (same as index.html) -->
+    <div id="footer-placeholder"></div>
+
+    <script src="/js/analytics.js"></script>
+</body>
+</html>
