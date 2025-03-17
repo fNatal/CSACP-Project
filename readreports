@@ -1,0 +1,128 @@
+import openai
+import nltk
+import string
+import numpy as np
+import pandas as pd
+from collections import Counter
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
+from keras.preprocessing.sequence import pad_sequences
+from sklearn.preprocessing import LabelEncoder
+
+# unable to run as i ran out of limits
+openai.api_key = "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"
+
+# Helper function to load text from a file (e.g., a report)
+def load_report(file_path):
+    with open(file_path, 'r') as file:
+        return file.read()
+
+# Function to identify criminal and forensic terminology
+def detect_criminal_terms(text):
+    # Basic prompt to detect criminal and forensic terms
+    prompt = f"Identify the criminal and forensic terminology used in the following text:\n\n{text}"
+    
+    response = openai.Completion.create(
+        model="gpt-3.5-turbo"
+        prompt=prompt,
+        temperature=0,
+        max_tokens=500
+    )
+    
+    result = response['choices'][0]['text'].strip()
+    return result
+
+# Function to tokenize and process text
+def preprocess_text(text):
+    # Sentence tokenization
+    sentences = sent_tokenize(text)
+    
+    # Word tokenization and stopword removal
+    stop_words = set(stopwords.words('english'))
+    words = word_tokenize(text.lower())
+    filtered_words = [word for word in words if word not in stop_words and word not in string.punctuation]
+    
+    return sentences, filtered_words
+
+# Function to extract features based on text analysis
+def extract_features(text):
+    # Preprocess the text
+    sentences, words = preprocess_text(text)
+    
+    # 1. Sentence Length Feature
+    sentence_lengths = [len(sentence.split()) for sentence in sentences]
+    avg_sentence_length = np.mean(sentence_lengths) if sentence_lengths else 0
+    
+    # 2. Punctuation Frequency Feature
+    punctuation_counts = Counter(char for char in text if char in string.punctuation)
+    total_punctuation = sum(punctuation_counts.values())
+    punctuation_frequency = {punct: count / total_punctuation for punct, count in punctuation_counts.items()} if total_punctuation else {}
+    
+    # 3. POS Tag Frequency Feature
+    pos_tags = nltk.pos_tag(words)
+    pos_tag_counts = Counter(tag for word, tag in pos_tags)
+    total_pos_tags = sum(pos_tag_counts.values())
+    pos_tag_distribution = {tag: count / total_pos_tags for tag, count in pos_tag_counts.items()} if total_pos_tags else {}
+    
+    # 4. Function Word Frequency Feature (using predefined list)
+    stop_words = set(stopwords.words('english'))
+    function_words = [word for word in words if word in stop_words]
+    function_word_counts = Counter(function_words)
+    total_function_words = len(function_words)
+    function_word_frequencies = {word: count / total_function_words for word, count in function_word_counts.items()} if total_function_words else {}
+    
+    # 5. Type-Token Ratio Feature (lexical diversity)
+    type_token_ratio = len(set(words)) / len(words) if words else 0
+    
+    # 6. Passive-to-Active Voice Ratio Feature
+    passive_to_active_ratio = calculate_passive_to_active_ratio(text)
+    
+    # 7. Forensic Term Extraction (using OpenAI API)
+    forensic_terms = detect_criminal_terms(text)
+    
+    # Combine all extracted features into a feature vector
+    feature_vector = [
+        avg_sentence_length,
+        punctuation_frequency,
+        pos_tag_distribution,
+        function_word_frequencies,
+        type_token_ratio,
+        passive_to_active_ratio,
+        forensic_terms
+    ]
+    
+    return feature_vector
+
+# Function to calculate passive-to-active voice ratio (simplified)
+def calculate_passive_to_active_ratio(text):
+    sentences = sent_tokenize(text)
+    passive_count = sum(1 for sentence in sentences if 'by' in sentence and 'was' in sentence)  # very basic check
+    active_count = len(sentences) - passive_count
+    return passive_count / active_count if active_count > 0 else 0
+
+# Function to prepare data for ML model
+def prepare_data_for_ml(feature_vectors):
+    # Convert feature vectors to DataFrame for ML processing
+    df = pd.DataFrame(feature_vectors)
+    return df
+
+# Main function to process the report and prepare features
+def process_report(file_path):
+    # Load the report (text file)
+    text = load_report(file_path)
+    
+    # Extract features from the report
+    feature_vector = extract_features(text)
+    
+    # Prepare the features for the ML model
+    prepared_data = prepare_data_for_ml([feature_vector])  # Wrapping in a list to keep consistent format
+    
+    return prepared_data
+
+# Example usage
+file_path = 'your-report.txt'  # Path to your text report
+prepared_data = process_report(file_path)
+
+# Show the prepared data (features) ready to be sent to an ML model
+print(prepared_data)
+
